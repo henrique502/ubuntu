@@ -1,6 +1,7 @@
 FROM ubuntu:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV DOCKER_BUILDKIT=1
 
 # Install deps
 RUN apt-get update && \
@@ -9,22 +10,19 @@ RUN apt-get update && \
     tzdata \
     curl \
     zip \
-    python \
-    apt-transport-https \
     ca-certificates \
-    gnupg-agent \
-    software-properties-common \
-    lsb-release \
-    gnupg
+    gnupg \
+    lsb-release
 
 # Install Docker
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" && \
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
     apt-get install -y docker-ce-cli
 
 # Install AWS CLI
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python get-pip.py && \
-    rm get-pip.py && \
-    pip install --upgrade pip && \
-    pip install awscli --upgrade
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm awscliv2.zip
